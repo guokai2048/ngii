@@ -1,0 +1,188 @@
+﻿@{
+    ViewBag.Title = "数据表表单";
+    Layout = "~/Views/Shared/_FormEasyui.cshtml";
+}
+
+<script>
+    var dataBaseLinkId = request('dataBaseLinkId');
+    var tableName = request('tableName');
+    var tableDescription = request('tableDescription');
+    $(function () {
+        if (tableName != "") {
+            $("#tableName").val(tableName);
+            $("#tableDescription").val(tableDescription);
+        }
+        GetGrid();
+    })
+    function GetGrid() {
+        var $gridTable = $("#gridTable");
+        var _url = "../../SystemManage/DataBaseTable/GetTableFiledListJson";
+        if (tableName == "") {
+            _url = "";
+        }
+        $gridTable.datagrid({
+            url: _url,
+            queryParams: { dataBaseLinkId: dataBaseLinkId, tableName: tableName },
+            title: '表字段信息',
+            fit: true,
+            rownumbers: true,
+            singleSelect: true,
+            nowrap: false,
+            columns: [[
+                { title: 'datatype', field: 'datatype', hidden: true },
+                { title: 'length', field: 'length', hidden: true },
+                { title: 'isnullable', field: 'isnullable', hidden: true },
+                { title: 'identity', field: 'identity', hidden: true },
+                { title: 'key', field: 'key', hidden: true },
+                { title: "字段名称", field: "column", width: 150, align: "left", sortable: false },
+                {
+                    title: "数据类型", field: "_column", width: 100, align: "left", sortable: false,
+                    formatter: function (value, row, index) {
+                        var length = "";
+                        if (row.datatype == 'varchar') {
+                            length = "(" + row.length + ")";
+                        }
+                        return row.datatype + length;
+                    }
+                },
+                {
+                    title: "允许空", field: "_isnullable", width: 50, align: "center", sortable: false,
+                    formatter: function (value, row, index) {
+                        return row.isnullable == 1 ? "√" : "";
+                    }
+                },
+                {
+                    title: "标识", field: "_identity", width: 50, align: "center", sortable: false,
+                    formatter: function (value, row, index) {
+                        return row.identity == 1 ? "√" : "";
+                    }
+                },
+                {
+                    title: "主键", field: "_key", width: 50, align: "center", sortable: false,
+                    formatter: function (value, row, index) {
+                        return row.key == 1 ? "√" : "";
+                    }
+                },
+                { title: "默认值", field: "defaults", width: 100, align: "left", sortable: false },
+                { title: "说明", field: "remark", width: 100, align: "left", sortable: false }
+            ]]
+        });
+    }
+    //添加
+    function btn_add_field() {
+        dialogOpen({
+            id: "FieldForm",
+            title: '添加字段',
+            url: '/SystemManage/DataBaseTable/FieldForm',
+            width: "450px",
+            height: "350px",
+            callBack: function (iframeId) {
+                top.frames[iframeId].AcceptClick();
+            }
+        });
+    };
+    //修改
+    function btn_edit_field() {
+        //var keyValue = $("#gridTable").getGridParam('selrow');
+        var rowIndex = $('#gridTable').datagrid('getRowIndex', $('#gridTable').datagrid('getSelected')).toString();
+        var keyValue = rowIndex >= 0 ? rowIndex : null;
+        if (checkedRow(keyValue)) {
+            dialogOpen({
+                id: "FieldForm",
+                title: '修改字段',
+                url: '/SystemManage/DataBaseTable/FieldForm?keyValue=' + keyValue,
+                width: "450px",
+                height: "350px",
+                callBack: function (iframeId) {
+                    top.frames[iframeId].AcceptClick();
+                }
+            });
+        }
+    }
+    //移除
+    function btn_delete_field() {
+        var selections = $('#gridTable').datagrid('getSelections');
+        if (selections.length > 0) {
+            dialogConfirm('注：您确定要移除吗？该操作将无法恢复？', function (r) {
+                if (r) {
+                    var selectRows = [];
+                    for (var i = 0; i < selections.length; i++) {
+                        selectRows.push(selections[i]);
+                    }
+                    for (var j = 0; j < selectRows.length; j++) {
+                        var index = $('#gridTable').datagrid('getRowIndex', selectRows[j]);
+                        $('#gridTable').datagrid('deleteRow', index);
+                    }
+                    dialogMsg("移除成功。", 1);
+                }
+            });
+
+        } else {
+            dialogMsg('请选择需要移除的字段！', 0);
+        }
+    }
+    //保存表单
+    function AcceptClick() {
+        if (!$('#form1').Validform()) {
+            return false;
+        }
+        //var fieldListJson = [];
+        //var rows = $('#gridTable').find('[role=row]');
+        //for (var i = 1; i < rows.length; i++) {
+        //    fieldListJson.push({
+        //        datatype: rows[i].childNodes[1].innerHTML.replace("&nbsp;", ''),
+        //        length: rows[i].childNodes[2].innerHTML.replace("&nbsp;",''),
+        //        isnullable: rows[i].childNodes[3].innerHTML.replace("&nbsp;", ''),
+        //        identity: rows[i].childNodes[4].innerHTML.replace("&nbsp;", ''),
+        //        key: rows[i].childNodes[5].innerHTML.replace("&nbsp;", ''),
+        //        column: rows[i].childNodes[6].innerHTML.replace("&nbsp;", ''),
+        //        defaults: rows[i].childNodes[11].innerHTML.replace("&nbsp;", ''),
+        //        remark: rows[i].childNodes[12].innerHTML.replace("&nbsp;", '')
+        //    });
+        //}
+        var postData = {
+            dataBaseLinkId: dataBaseLinkId,
+            tableName: $("#tableName").val(),
+            tableDescription: $("#tableDescription").val(),
+            fieldListJson: JSON.stringify($("#gridTable").datagrid("getData"))
+        }
+        $.SaveForm({
+            url: "../../SystemManage/DataBaseTable/SaveForm",
+            param: postData,
+            loading: "正在保存数据...",
+            success: function () {
+                $.currentIframe().$('#gridTable').datagrid('reload');
+            }
+        })
+    }
+</script>
+<div class="easyui-layout" data-options="fit:true">
+    <div data-options="region:'north',border:false" style="height:45px;overflow: hidden;">
+        <table class="form">
+            <tr>
+                <th class="formTitle" style="text-align: left; padding-left: 7px; width: 55px;">表名称：</th>
+                <td class="formValue">
+                    <input id="tableName" type="text" class="form-control" placeholder="请输入表名称" isvalid="yes" checkexpession="NotNull" />
+                </td>
+                <th class="formTitle" style="text-align: left; padding-left: 7px; width: 55px;">表说明：</th>
+                <td class="formValue">
+                    <input id="tableDescription" type="text" class="form-control" placeholder="添加说明" isvalid="yes" checkexpession="NotNull" />
+                </td>
+            </tr>
+        </table>
+    </div>
+    <div data-options="region:'center',border:false">
+        <table id="gridTable"></table>
+        <style>
+            .datagrid .panel-title {
+                text-align: right;
+                padding-right: 5px;
+            }
+        </style>
+    </div>
+    <div style="position: absolute; top: 48px; left: 10px;">
+        <a id="lr-add" class="btn btn-success btn-xs" onclick="btn_add_field()"><i class="fa fa-plus"></i>&nbsp;添加</a>
+        <a id="lr-edit" class="btn btn-info btn-xs" onclick="btn_edit_field()"><i class="fa fa-pencil-square-o"></i>&nbsp;修改</a>
+        <a id="lr-delete" class="btn btn-danger btn-xs" onclick="btn_delete_field()"><i class="fa fa-trash-o"></i>&nbsp;移除</a>
+    </div>
+</div>

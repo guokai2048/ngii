@@ -1,0 +1,90 @@
+﻿@{
+    ViewBag.Title = "个人中心";
+    Layout = "~/Views/Shared/_FormEasyui.cshtml";
+}
+<script>
+    var keyValue = '@ViewBag.userId';
+    $(function () {
+        InitControl();
+        $("#banCiDate").ComboBox({
+            url: "../../SystemManage/DataItemDetail/GetDataItemListJson",
+            param: { EnCode: "GongXuWorkNameTime" },
+            id: "ItemValue",
+            text: "ItemName",
+            description: "==请选择==",
+            height: "200px"
+        });
+
+        var banCiDate = "@CM.Application.Code.OperatorProvider.Provider.Current().banCiDate";
+        if (banCiDate) {
+            $('#banCiDate').ComboBoxSetValue(banCiDate);
+        }
+        $("#banCi").ComboBox({
+            url: "../../SystemManage/DataItemDetail/GetDataItemListJson",
+            param: { EnCode: "GongXuWorkName" },
+            id: "ItemValue",
+            text: "ItemName",
+            description: "==请选择==",
+            height: "200px"
+        });
+        var banCi = "@CM.Application.Code.OperatorProvider.Provider.Current().banCi";
+        if (banCi) {
+            $('#banCi').ComboBoxSetValue(banCi);
+        }
+    });
+    //初始化数据
+    function InitControl() {
+        
+
+        
+ 
+    }
+    //选择操作人
+    function Search_User() {
+        dialogOpen({
+            id: "Search_User",
+            title: '选择操作人',
+            url: '/BaseManage/User/IndexSelect',
+            width: "900px",
+            height: "600px",
+            callBack: function (iframeId) {
+                top.frames[iframeId].getSelecteds(function (data) {
+                    var rows = JSON.parse(data);
+                    var ids = [];
+                    var names = [];
+                    for (var i = 0; i < rows.length; i++) {
+                        ids.push(rows[i].UserId);
+                        names.push(rows[i].RealName);
+                    }
+                    $("#opeName").val(names.join(','));
+
+                });
+            },
+            btn: ['确认选中', '关闭']
+        });
+    }
+
+</script>
+<div class="ui-layout" id="layout" style="height: 100%; width: 100%;">
+
+
+    <div class="center-Panel" style="margin: 0;">
+        <div class="profile-content" style="background: #fff;">
+            <div id="BaseInfo" class="flag">
+                <div class="title">
+                    基本信息
+                </div>
+                <form id="form1">
+
+
+                    <table class="form" style="margin-top: 20px;width:310px; height:100%">
+                        
+                    </table>
+                </form>
+
+            </div>
+
+        </div>
+    </div>
+
+</div>

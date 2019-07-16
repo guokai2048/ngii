@@ -1,0 +1,57 @@
+@{;
+    Layout = "~/Views/Shared/_Index.cshtml";
+}
+<!--通用上传，返回上传excel的数据-->
+<script>
+    //保存表单;
+    function subFile(callback) {
+        if (!$('#form1').Validform()) {
+            return false;
+        }
+        var formData = new FormData($("#form1")[0]);
+        $.ajax({
+            url: "/ImportExcel/ImportExcel",
+            type: 'POST',
+            dataType: "json",
+            data: formData,
+            cache: false,
+            processData: false,
+            contentType: false,
+            success: function (data) {
+                if (data.type == "3") {
+                    dialogAlert(data.message, -1);
+                } else {
+                    callback(data);
+                    dialogClose();
+                }
+
+            },
+            error: function (XMLHttpRequest, textStatus, errorThrown) {
+                dialogMsg(errorThrown, -1);
+            }
+        });
+    }
+    var file = "/Uploads/系统模版/" + "@ViewBag.mbFileName" + ".xlsx";
+    $(function () {
+        $("#fileload").attr("href", file);
+    });
+</script>
+<div style="margin: 10px;">
+    <form id="form1" enctype="multipart/form-data" method="post">
+        <table class="form">
+            <tr>
+                <td class="formTitle">选择文件<font face="宋体">*</font></td>
+                <td class="formValue">
+                    <input name="mbFileName" type="hidden" value="@ViewBag.mbFileName" />
+                    <input name="uploadfile" type="file" isvalid="yes" checkexpession="NotNull" />
+                </td>
+            </tr>
+            <tr>
+                <td class="formTitle">模板下载</td>
+                <td class="formValue" style="height:50px;line-height:50px;">
+                    <a target="_blank" id="fileload" href="#" style="color:blue;">下载</a>
+                </td>
+            </tr>
+        </table>
+    </form>
+</div>

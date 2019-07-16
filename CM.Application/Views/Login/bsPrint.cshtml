@@ -1,0 +1,151 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>标签打印</title>
+    <link href="~/Content/scripts/bootstrap/bootstrap.min.css" rel="stylesheet" />
+    <link href="~/Content/styles/CM-login.css" rel="stylesheet" />
+    <link href="~/Content/styles/font-awesome.min.css" rel="stylesheet" />
+    <link rel="icon" href="~/Content/images/favicon.ico">
+    <script src="~/Content/scripts/jquery/jquery-1.10.2.min.js"></script>
+    <script src="~/Content/scripts/plugins/jquery.md5.js"></script>
+    <script src="~/Content/scripts/plugins/cookie/jquery.cookie.js"></script>
+    <script src="~/Content/scripts/plugins/dialog/dialog.js"></script>
+    <script src="~/Content/scripts/plugins/validator/validator.js"></script>
+    <script src="~/Content/scripts/plugins/tipso.min.js"></script>
+    <link href="~/Content/scripts/utils/CM-ui.js" rel="stylesheet" />
+</head>
+<body>
+    <script src='http://localhost:8000/CLodopfuncs.js'></script>
+    <script src='http://localhost:18000/CLodopfuncs.js'></script>
+    <script>
+        var LODOP = getCLodop();
+        function request(n) {
+            for (var u = location.search.slice(1), r = u.split("&"), i, t = 0; t < r.length; t++) if (i = r[t].split("="), i[0] == n) return unescape(i[1]) == "undefined" ? "" : unescape(i[1]);
+            return ""
+        }
+        //弹出打印类型 预览：preview，设计：design (默认)
+        var ptype = request("ptype");//打印方式  0=直接打印 1=预览打印
+        var pCount = request("pCount");//打印张数
+        var pPrinter = request("pPrinter");//打印机序号
+        if (!pPrinter)
+        {
+            pPrinter = 0;
+        }
+        if (!pCount) {
+            pCount = '1';
+        }
+        //模板ID
+        var tplname = request("tplname");
+        if (!tplname) tplname = "7e28666f-02e8-437f-a878-dc02e586307c";//测试模板7e28666f-02e8-437f-a878-dc02e586307c
+        //数据ID
+        var dataid = request("dataid");
+        var datasort = request("datasort");
+        //图片标签
+        var ImgFlag = [];// [{name:"WA", value:"url" }];
+        //当前域名
+        var hosturl = "http://" + window.location.host;
+        console.log(hosturl);
+        //打印标签函数
+        function printBar() {
+            if (!dataid) return;
+            $.post("/Login/getPrintData", { tplname: tplname, dataid: dataid, datasort: datasort }, function (reA) {
+
+                LODOP.PRINT_INIT("BS标签打印" + new Date().getTime());
+                //LODOP.SET_PRINT_PAGESIZE(2, 0, 0, "A4");//1纵向 2横向
+                LODOP.SET_SHOW_MODE("LANDSCAPE_DEFROTATED", 1);//横向时的正向显示
+                LODOP.SET_PRINT_MODE("TRYLINKPRINTER_NOALERT", true);//这个语句设置网络共享打印机连接不通时是否提示一下
+                var allJson = '';
+
+                for (var i = 0; i < reA.length; i++) {
+                    var re = reA[i];
+                    if (re.type != 1) {
+                        alert(re.message);
+                        // return;
+                    }
+                    var tpl = unescape(re.tpl);
+                    ImgFlag = re.imgflag;
+                    //图片标签匹配
+                    $.each(ImgFlag, function (i, v) {
+                        //LODOP.ADD_PRINT_TEXT(-2,42,65,35,"{{imgtubiao}}");
+                        var static_reg = new RegExp(".*?LODOP.ADD_PRINT_TEXT\\(.*?\"\\{\\{" + v.name + "\\}\\}\"\\).*?", "gi");
+                        var arrs = tpl.match(static_reg);
+                        if (arrs && arrs.length > 0) {
+                            //LODOP.ADD_PRINT_IMAGE(30,20,600,250,"<img border='0' src='网络地址'/>");
+                            //LODOP.SET_PRINT_STYLEA(0, "Stretch", 2);//按比例缩放
+                            //LODOP.SET_PRINT_STYLEA(0,"Stretch",1);//可变现缩放
+                            for (var j = 0; j < arrs.length; j++) {
+                                var temp = arrs[j];
+                                temp = temp.replace("ADD_PRINT_TEXT", "ADD_PRINT_IMAGE");
+                                temp = temp.replace("{{" + v.name + "}}", "<img border='0' src='" + hosturl + v.value + "'/>");
+                                tpl = tpl.replace(arrs[j], temp + ";LODOP.SET_PRINT_STYLEA(0,'Stretch', 2)");
+                            }
+                        }
+                    });
+                    var data = re.data;
+                    var danData = data.DAN;//单数据
+                    var hangData = data.H;//行数据
+                    $.each(data, function (k, v) {
+                        if ($.type(v) === "string" || $.type(v) === "number") {
+                            var reg = new RegExp("\\{\\{" + k + "\\}\\}", "gi");
+                            tpl = tpl.replace(reg, v);
+                        }
+                        else if ($.type(v) === "array") {
+                            if (k == "DAN" && v.length > 0) {
+                                //单数据只解析一行
+                                $.each(v[0], function (key, value) {
+                                    var reg = new RegExp("\\{\\{" + key + "\\}\\}", "gi");
+                                    tpl = tpl.replace(reg, value);
+                                });
+                            }
+                            else
+                                $.each(v, function (i, j) {
+                                    $.each(j, function (kk, vv) {
+                                        var reg1 = new RegExp("\\{\\{" + k + (i + 1) + "\\." + kk + "\\}\\}", "gi");
+                                        tpl = tpl.replace(reg1, vv);
+                                    });
+                                });
+                        }
+                    });
+                    var re1 = /\{\{.*?\}\}/gi;
+                    tpl = tpl.replace(re1, "");
+
+
+                    tpl += ' LODOP.NewPage();';
+                    allJson += tpl;
+                    //(new Function('', tpl))();
+                    // LODOP.NewPage();//分页预览
+                }
+                //console.log(allJson);
+                (new Function('', allJson))();
+                LODOP.SET_LICENSES("", "4924F29A52B49BF684BE99670FC72910", "C94CEE276DB2187AE6B65D56B3FC2848", "");
+                LODOP.SET_PRINT_COPIES(pCount);//打印张数
+                
+             
+                if (ptype == '0') {
+
+                    LODOP.SET_PRINTER_INDEX(pPrinter);//打印机
+
+                    LODOP.PRINT();//直接打印
+                }
+                else {
+                    LODOP.PREVIEW();//打印预览
+                }
+            }, "json");
+        }
+
+        setTimeout("printBar()", "500");
+        //printBar();
+
+        function test() {
+            LODOP.PRINT_INIT("BS标签打印");
+            LODOP.SET_PRINT_PAGESIZE(2, 0, 0, "A4");//1纵向 2横向
+            LODOP.SET_SHOW_MODE("LANDSCAPE_DEFROTATED", 1);//横向时的正向显示
+            //模板代码
+
+        }
+    </script>
+</body>
+</html>

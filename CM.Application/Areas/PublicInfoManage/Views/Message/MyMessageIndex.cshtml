@@ -1,0 +1,287 @@
+@{;
+    ViewBag.Title = "消息表:列表页面";
+    Layout = "~/Views/Shared/_LayoutIndexEasyui.cshtml";
+}
+<script>
+    $(function () {
+        InitialPage();
+        GetGrid();
+    });
+    //初始化页面
+    function InitialPage() {
+
+        //$("#messageType").ComboBox({
+        //    url: "../../SystemManage/DataItemDetail/GetDataItemListJson",
+        //    param: { EnCode: "messageType" },
+        //    id: "ItemValue",
+        //    text: "ItemName",
+        //    description: "==请选择==",
+        //    height: "200px"
+        //}).bind("change", function () {
+        //    var value = $(this).attr('data-value');
+        //    $("#Sys_messageType").val(value);
+        //});
+
+    }
+    //加载表格
+    function GetGrid() {
+        //加载表格grid
+        var $gridTable = $('#gridTable');
+        $gridTable.datagrid({
+            fit: true,
+            idField: 'id',
+            rownumbers: true,
+            emptyMsg: '<div style="color:red; padding:4px; border-bottom:#ccc 1px solid;">无相关数据!</div>',
+            sortName: 'sendTime',
+            sortOrder: 'asc',
+            singleSelect: false,
+            nowrap: false,
+            url: "../../PublicInfoManage/Message/getMyMessage",
+            queryParams: { curStatus: 0, splitPage: $("#filter-form").setQueryParmsAll() },
+            columns: [[
+                { title: 'ID', field: 'id', checkbox: true },
+                {
+                    title: '消息类型', field: 'messageType', width: 100, align: 'left', sortable: false, hidden: false,
+                    formatter: function (cellvalue, options, rowObject) {
+                        return top.clientdataItem["messageType"][cellvalue] == undefined ? "" : top.clientdataItem["messageType"][cellvalue];
+                    }
+                },
+                { title: '消息标题', field: 'messageTitle', width: 150, align: 'left', sortable: false, hidden: false },
+                { title: '消息内容', field: 'messageContent', width: 360, align: 'left', sortable: false, hidden: false },
+                { title: '发送时间', field: 'sendTime', width: 130, align: 'left', sortable: false, hidden: false },
+
+                { title: '接收人ID集合', field: 'receivers', width: 120, align: 'left', sortable: false, hidden: true },
+                { title: '接收人姓名集合', field: 'receiversName', width: 100, align: 'left', sortable: false, hidden: true },
+
+                { title: '接收人', field: 'receiverName', width: 120, align: 'left', sortable: false, hidden: false },
+                { title: '接收人ID', field: 'receiver', width: 120, align: 'left', sortable: false, hidden: true },
+
+             
+                { title: '备注', field: 'strMemo', width: 100, align: 'left', sortable: false, hidden: true },
+                { title: '创建时间', field: 'CreateDate', width: 130, align: 'left', sortable: false, hidden: false },
+                { title: '创建人', field: 'CreateUserName', width: 100, align: 'left', sortable: false, hidden: false }
+            ]]
+        });
+        //$gridTable.authorizeColModel();//列表数据权限
+        //查询条件
+        $("#queryCondition .dropdown-menu li").click(function () {
+            var text = $(this).find('a').html();
+            var value = $(this).find('a').attr('data-value');
+            $("#queryCondition .dropdown-text").html(text).attr('data-value', value)
+        });
+        //查询点击事件
+        $("#btn_Search").click(function () {
+            SearchEvent();
+            $(".ui-filter-text").trigger("click");
+        });
+        //重置
+        $("#btn_Reset").click(function () {
+            $("#filter-form").find("input[type='text']").val("");
+            $("#filter-form").find("div[type='select']").ComboBoxSetValue("").trigger("change");
+        });
+        //左边分类点击事件
+        $(".profile-nav li").click(function () {
+            $('#gridTable').datagrid('reload');
+            $('#gridTable').datagrid('uncheckAll');
+            $('#gridTable').datagrid('unselectAll');
+            SearchEvent();
+        })
+    }
+    //查询表格函数
+    function SearchEvent() {
+
+        $("#gridTable").datagrid('load', {
+            splitPage: $("#filter-form").setQueryParmsAll(),
+            curStatus: $(".profile-nav").find('li.active').attr('data-value')
+        });
+    }
+    //删除
+    function btn_delete() {
+
+        var rows = $('#gridTable').datagrid('getSelections');
+        if (rows.length > 0) {
+            var txt = "[";
+            for (var i = 0; i < rows.length; i++) {
+                var r = "{";
+                r += "\"" + "id" + "\"\:\"" + rows[i].id + "\",";
+                r += "\"" + "messageTitle" + "\"\:\"" + rows[i].messageTitle + "\",";
+                r += "},";
+                txt += r;
+            }
+            txt = txt.substring(0, txt.length - 1);
+            txt += "]";
+
+            $.RemoveForm({
+                msg: "注：您确定要删除[" + rows.length + "]条数据。",
+                loading: "正在处理数据...",
+                url: '../../PublicInfoManage/Message/RemoveForm',
+                param: { entitys: txt },
+                success: function (data) {
+                    $('#gridTable').datagrid('reload');
+                    $('#gridTable').datagrid('uncheckAll');
+                    $('#gridTable').datagrid('unselectAll');
+                }
+            })
+        } else {
+            dialogMsg('请选择需要删除的单据！', 0);
+        }
+
+    }
+    //已读
+    function btn_read() {
+       
+        var rows = $('#gridTable').datagrid('getSelections');
+        if (rows.length > 0) {
+            var txt = "[";
+            for (var i = 0; i < rows.length; i++) {
+                var r = "{";
+                r += "\"" + "id" + "\"\:\"" + rows[i].id + "\",";
+                r += "\"" + "messageTitle" + "\"\:\"" + rows[i].messageTitle + "\",";
+                r += "},";
+                txt += r;
+            }
+            txt = txt.substring(0, txt.length - 1);
+            txt += "]";
+
+            $.RemoveForm({
+                msg: "注：您确定要标记[" + rows.length + "]条数据 为已读状态。",
+                loading: "正在处理数据...",
+                url: '../../PublicInfoManage/Message/ReadForm',
+                param: { entitys: txt },
+                success: function (data) {
+                    $('#gridTable').datagrid('reload');
+                    $('#gridTable').datagrid('uncheckAll');
+                    $('#gridTable').datagrid('unselectAll');
+                }
+            })
+        } else {
+            dialogMsg('请选择需要操作的单据！', 0);
+        }
+    }
+    //回收
+    function btn_recycle() {
+         
+        var rows = $('#gridTable').datagrid('getSelections');
+        if (rows.length > 0) {
+            var txt = "[";
+            for (var i = 0; i < rows.length; i++) {
+                var r = "{";
+                r += "\"" + "id" + "\"\:\"" + rows[i].id + "\",";
+                r += "\"" + "messageTitle" + "\"\:\"" + rows[i].messageTitle + "\",";
+                r += "},";
+                txt += r;
+            }
+            txt = txt.substring(0, txt.length - 1);
+            txt += "]";
+
+            $.RemoveForm({
+                msg: "注：您确定要标记[" + rows.length + "]条数据 为回收状态?",
+                loading: "正在处理数据...",
+                url: '../../PublicInfoManage/Message/RecycleForm',
+                param: { entitys: txt },
+                success: function (data) {
+                    $('#gridTable').datagrid('reload');
+                    $('#gridTable').datagrid('uncheckAll');
+                    $('#gridTable').datagrid('unselectAll');
+                }
+            })
+        } else {
+            dialogMsg('请选择需要操作的单据！', 0);
+        }
+    }
+
+    //详细
+    function btn_detail() {
+        var keyValue = $("#gridTable").easyUiGridRowValue("id");
+        if (checkedRow(keyValue)) {
+            dialogOpen({
+                id: "Detail",
+                title: '消息详情',
+                url: '/PublicInfoManage/Message/MessageDetail?keyValue=' + keyValue,
+                width: "750px",
+                height: "450px",
+                btn: null
+            });
+        }
+    }
+</script>
+@*------------------------------JavaScript方法结束------------------------------*@
+<div class="easyui-layout" data-options="fit:true">
+    <div data-options="region:'west',split:true" style="width: 200px;">
+        <div class="west-Panel">
+            <div class="profile-nav">
+                <ul style="padding-top: 20px;">
+                    <li class="active" data-value="0">未读消息</li>
+                    <li data-value="1">已读消息</li>
+                    <li data-value="2">回收站</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <div data-options="region:'center',border:false" style="background:#fafafa;">
+        <div class="easyui-layout" data-options="fit:true">
+            <div data-options="region: 'north', border: false" style="height: 60px; overflow: hidden;">
+                <div class="titlePanel">
+                    <div class="title-search" style="position:fixed;">
+                        <table>
+                            <tr>
+                                <td>查询条件</td>
+                                <td style="padding-left: 10px;">
+                                    <div class="ui-filter" style="width: 200px;">
+                                        <div class="ui-filter-text">
+                                            <strong>请输入查询条件</strong>
+                                        </div>
+                                        <div id="searchbar" class="ui-filter-list" style="width: 350px;">
+
+                                            <form>
+                                                <table class="form" id="filter-form">
+
+                                                    <tr>
+                                                        <td class="formTitle">消息类别</td>
+                                                        <td class="formValue">
+                                                            <input type="hidden" name="Conditions[0].Key" value="messageType" />
+                                                            <input type="text" id="Sys_messageType" name="Conditions[0].Value">
+                                                            <input type="hidden" name="Conditions[0].IsLike" value="true" />
+                                                            @*<div id="messageType" type="select" class="ui-select"></div>*@
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="formTitle">消息标题</td>
+                                                        <td class="formValue">
+                                                            <input type="hidden" name="Conditions[1].Key" value="messageTitle" />
+                                                            <input name="Conditions[1].Value" type="text" class="form-control">
+                                                            <input type="hidden" name="Conditions[1].IsLike" value="true" />
+                                                        </td>
+                                                    </tr>
+                                                </table>
+                                            </form>
+
+
+                                            <div class="ui-filter-list-bottom">
+                                                <a id="btn_Reset" class="btn btn-default">&nbsp;重&nbsp;&nbsp;置</a>
+                                                <a id="btn_Search" class="btn btn-primary">&nbsp;查&nbsp;&nbsp;询</a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+
+                            </tr>
+                        </table>
+                    </div>
+                    <div class="toolbar">
+                        <div class="btn-group">
+                            <a id="lr-read" class="btn btn-default" onclick="btn_read()"><i class="fa fa-star"></i>&nbsp;标记已读</a>
+                            <a id="lr-replace" class="btn btn-default" onclick="reload()"><i class="fa fa-refresh"></i>&nbsp;刷新</a>
+                            <a id="lr-recycle" class="btn btn-default" onclick="btn_recycle()"><i class="fa fa-trash-o"></i>&nbsp;回收站</a>
+                            <a id="lr-delete" class="btn btn-default" onclick="btn_delete()"><i class="fa fa-trash-o"></i>&nbsp;删除</a>
+                        </div>
+                        @*<script>$('.toolbar').authorizeButton()</script>*@
+                    </div>
+                </div>
+            </div>
+            <div data-options="region:'center',border: false">
+                <table id="gridTable"></table>
+            </div>
+        </div>
+    </div>
+</div>

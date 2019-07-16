@@ -1,0 +1,117 @@
+﻿/*登录页*/
+.Loginbody{
+    background: #2e3e4e;
+	margin:0;
+	padding:0;
+}
+.Loginbody .wp{
+    width: 1000px;
+    margin: 0 auto;
+}
+.logo{
+    margin-top: 13%;
+    color: #fff;
+    height: 70px;
+}
+
+.title-zh
+{
+    font-size:28px;
+    font-weight:900;
+}
+
+.title-en
+{
+	font-size:16px;
+    color:#9aa5a9;
+}
+.content{
+    border-radius: 5px;
+    box-shadow: 0 10px 20px rgba(0,0,0,.6);
+    height: 332px;
+}
+.content .img-bj{
+    float: left;
+}
+
+.content  .Loginform{
+    width: 400px;
+    float: left;
+    height: 332px;
+    background: #fff;
+    /*padding: 0 12px 0 20px;*/
+}
+.form-tit{
+    padding: 0 12px 0 20px;
+    background: #47c1c2;
+    height: 64px;
+   line-height: 64px;
+    font-size: 18px;
+    color: #fff;
+}
+.form-bd{
+    padding: 0 20px;
+
+}
+.form-bd form div{
+    margin-top:25px;
+}
+.form-bd .input-group-addon i{
+    display: inline-block;
+    margin-right: 5px;
+}
+.form-bottom{
+    padding: 0 80px;
+    text-align: center;
+}
+.form-bottom button{
+    font-size: 15px;
+    padding: 7px 20px;
+}
+.form-bottom .btn1{
+
+    float: left;
+}
+.form-bottom .btn2{
+    float: right;
+}
+
+.copyright{
+   color: #fff;
+    margin-top: 30px;
+    text-align: center;
+}
+
+.copyright a{
+    color: #7b98bc;
+}
+.copyright a:hover{
+    text-decoration: none;
+}
+
+.form-message{
+    height: 20px;
+    color:red;
+    text-align: center;
+}
+
+.btn button {
+    background-color: #397fc4;
+    border: 0 none;
+    border-radius: 10px;
+    color: #fff;
+    cursor: pointer;
+    font-size: 16px;
+    height: 40px;
+    width: 100%;
+}
+
+
+
+
+
+
+
+
+
+

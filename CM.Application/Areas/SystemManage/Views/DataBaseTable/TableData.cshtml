@@ -1,0 +1,99 @@
+﻿@{
+    ViewBag.Title = "表数据";
+    Layout = "~/Views/Shared/_IndexEasyui.cshtml";
+}
+<script>
+    var dataBaseLinkId = request('dataBaseLinkId');
+    var tableName = request('tableName');
+    $(function () {
+        GetGrid();
+    });
+
+    //加载表格
+    function GetGrid() {
+        var columns = [];
+        var colModelData = [];
+        $.ajax({
+            url: "../..//SystemManage/DataBaseTable/GetTableFiledListJson",
+            data: { dataBaseLinkId: dataBaseLinkId, tableName: tableName },
+            type: "get",
+            dataType: "json",
+            async: false,
+            success: function (json) {
+                $.each(json, function (i) {
+                    var field = json[i].column.toLocaleLowerCase();;
+                    var remark = json[i].remark;
+                    $("#switchWhere").append($("<option title=" + remark + "></option>").val(field).html(field));
+                    colModelData.push({ title: "<div title=" + remark + ">" + field + "</div>", field: field, align: "left" });
+
+                });
+
+                columns.push(colModelData);
+            }
+        });
+        
+        var $gridTable = $("#gridTable");
+        $gridTable.datagrid({
+            url: "../../SystemManage/DataBaseTable/GetTableDataListJson",
+            queryParams: { dataBaseLinkId: dataBaseLinkId, tableName: tableName },
+            columns: columns,
+            fit: true,
+            rownumbers: true,
+            pagination: true,
+            pageSize: 20,
+            pageList: [20, 50, 100],
+            singleSelect: true,
+            nowrap: false
+        });
+        //查询事件
+        $("#btn_Search").click(function () {
+        
+            $gridTable.datagrid('load', {
+                dataBaseLinkId: dataBaseLinkId,
+                tableName: tableName,
+                switchWhere: $("#switchWhere").val(),
+                logic: $("#logic").val(),
+                keyword: $("#txt_Keyword").val()
+            });
+        });
+    }
+</script>
+<div class="easyui-layout" data-options="fit:true">
+    <div data-options="region:'north',border:false" style="height:60px;overflow: hidden;">
+        <div class="titlePanel" style="border: 0px;">
+            <div class="title-search">
+                <table>
+                    <tr>
+                        <th style="white-space: nowrap; font-weight: normal;">查询条件：</th>
+                        <td>
+                            <select id="switchWhere" class="form-control" style="width: 100px"></select>
+                        </td>
+                        <td style="padding-left: 1px;">
+                            <select id="logic" class="form-control">
+                                <option value="Equal">等于</option>
+                                <option value="NotEqual">不等于</option>
+                                <option value="Greater">大于</option>
+                                <option value="GreaterThan">大于等于</option>
+                                <option value="Less">小于</option>
+                                <option value="LessThan">小于等于</option>
+                                <option value="Null">为空</option>
+                                <option value="NotNull">不为空</option>
+                                <option value="Like">包含</option>
+                            </select>
+                        </td>
+                        <td style="padding-left: 1px;">
+                            <input id="txt_Keyword" type="text" class="form-control" placeholder="请输入要查询关键字" style="width: 200px;" />
+                        </td>
+                        <td style="padding-left: 5px;">
+                            <a id="btn_Search" class="btn btn-primary"><i class="fa fa-search"></i>&nbsp;查询</a>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+     </div>
+    <div data-options="region:'center',border:false">
+        <table id="gridTable"></table>
+
+    </div>
+    </div>
