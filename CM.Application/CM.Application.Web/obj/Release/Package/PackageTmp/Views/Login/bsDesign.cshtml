@@ -1,0 +1,54 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>打印设计</title>
+    <link href="~/Content/scripts/bootstrap/bootstrap.min.css" rel="stylesheet" />
+    <link href="~/Content/styles/learun-login.css" rel="stylesheet" />
+    <link href="~/Content/styles/font-awesome.min.css" rel="stylesheet" />
+    <link rel="icon" href="~/Content/images/favicon.ico">
+    <script src="~/Content/scripts/jquery/jquery-1.10.2.min.js"></script>
+    <script src="~/Content/scripts/plugins/jquery.md5.js"></script>
+    <script src="~/Content/scripts/plugins/cookie/jquery.cookie.js"></script>
+    <script src="~/Content/scripts/plugins/dialog/dialog.js"></script>
+    <script src="~/Content/scripts/plugins/validator/validator.js"></script>
+    <script src="~/Content/scripts/plugins/tipso.min.js"></script>
+</head>
+<body style="background-color:#eee;">
+    <script src='http://localhost:8000/CLodopfuncs.js'></script>
+    <script src='http://localhost:18000/CLodopfuncs.js'></script>
+    <script>
+        var LODOP = getCLodop();
+        function test() {
+            var tpl = $.trim($("#con").val());
+            LODOP.PRINT_INIT("BS标签打印");
+            //LODOP.SET_PRINT_PAGESIZE(2, 0, 0, "A5");//1纵向 2横向
+            LODOP.SET_SHOW_MODE("LANDSCAPE_DEFROTATED", 1);//横向时的正向显示
+            //模板代码
+            (new Function('', tpl))();
+            //
+            LODOP.PRINT_DESIGN();
+        }
+        function tt()
+        {
+            
+        }
+    </script>
+    <table style="width:100%;border:none;">
+        <tr>
+            <td style="text-align:center; width:200px; height:40px; line-height:40px;">
+                <input type="button" onclick="tt()" style="margin:10px auto;" value="弹出设计界面" />
+            </td>
+        </tr>
+        <tr>
+            <td style="text-align:center; height:510px;width:100%;">
+                <textarea id="con" style="height:500px;width:600px;" placeholder="填写打印代码"></textarea>
+
+            </td>
+        </tr>
+    </table>
+
+</body>
+</html>

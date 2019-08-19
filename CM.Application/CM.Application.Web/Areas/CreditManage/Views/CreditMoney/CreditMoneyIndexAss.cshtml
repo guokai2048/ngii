@@ -1,0 +1,340 @@
+@{;
+    ViewBag.Title = "贷款申请:列表页面";
+    Layout = "~/Views/Shared/_LayoutIndexEasyui.cshtml";
+}
+<link href="~/Content/styles/mesCSS.css" rel="stylesheet" />
+<script src="~/Content/scripts/jquery/jquery-migrate-1.2.1.js"></script>
+<script src="~/Content/scripts/jquery/jquery.jmpopups.js"></script>
+
+<script>
+    ;
+    $(function () {
+        GetGrid();
+    });
+    //加载表格
+    function GetGrid() {
+        //加载表格grid
+        var $gridTable = $('#gridTable');
+        $gridTable.datagrid({
+            fit: true,
+            idField: 'id',
+            rownumbers: true,
+            emptyMsg: '<div style="color:red; padding:4px; border-bottom:#ccc 1px solid;">无相关数据!</div>',
+            sortName: 'CreateDate',
+            sortOrder: 'desc',
+            singleSelect: true,
+            nowrap: true,
+            pagination: true,
+            pageSize: 100,
+            pageList: [100, 500, 1000, 3000],
+            url: "../../CreditManage/CreditMoney/GetDataGridJson",
+            queryParams: getSoSo(),
+            columns: [[
+                { title: '申请ID', field: 'id', checkbox: true },
+                { title: '用户ID', field: 'userID', width: 80, align: 'left', sortable: true, hidden: true },
+                { title: '姓名', field: 'userName', width: 80, align: 'left', sortable: true, hidden: false },
+                { title: '身份证', field: 'carCode', width: 80, align: 'left', sortable: true, hidden: false },
+                {
+                    title: '申请日期', field: 'opeTime', width: 90, align: 'left', sortable: true, hidden: false,
+                    formatter: function (value, row, index) { return formatDate(value, 'yyyy-MM-dd'); }
+                },
+                { title: '贷款年限', field: 'daiYear', width: 80, align: 'left', sortable: true, hidden: false },
+                { title: '抵押物', field: 'diYaMoney', width: 80, align: 'left', sortable: true, hidden: false },
+                { title: '贷款金额', field: 'daiMoney', width: 80, align: 'left', sortable: true, hidden: false },
+                { title: '年收入', field: 'yearMoney', width: 80, align: 'left', sortable: true, hidden: false },
+
+                {
+                    title: '是否通过', field: 'isOK', width: 50, align: 'left', sortable: true, hidden: false,
+                    formatter: function (value, row, index) {
+                        if (value == -1) { return "" }
+                        if (value == 0) { return "未通过" }
+                        if (value == 1) { return "通过" }
+
+                    }
+                },
+                { title: '风险评价', field: 'isOKStr', width: 80, align: 'left', sortable: true, hidden: false },
+
+                {
+                    title: '操作', field: 'SumCount', width: 90, align: 'left', hidden: false,
+                    formatter: function (value, row, index) {
+                        return '<a href="javascript:void(0)" style="text-decoration:underline;" onclick="btnCount(\'' + row.id + '\',\'' + row.userID + '\',\'' + index + '\')">风险值计算</a>';
+                    }
+                },
+
+
+                {
+                    title: '查看', field: 'SumLook', width: 90, align: 'left', hidden: false,
+                    formatter: function (value, row, index) {
+                        return '<a href="javascript:void(0)" style="text-decoration:underline;" onclick="btnLook(\'' + row.id + '\',\'' + row.userID + '\',\'' + index + '\')">风险结果查看</a>';
+                    }
+                },
+
+
+                { title: '风险评价时间', field: 'pingDate', width: 80, align: 'left', sortable: true, hidden: false },
+                { title: '风险评价人ID', field: 'pingUserID', width: 80, align: 'left', sortable: true, hidden: true },
+                { title: '风险评价人', field: 'pingUserName', width: 80, align: 'left', sortable: true, hidden: false },
+
+
+
+            ]],
+        });
+        $("#time_horizonV a.btn-default").click(function () {
+            $("#time_horizonV a.btn-default").removeClass("active");
+            $("#time_horizon a.btn-default").removeClass("active");
+            $(this).addClass("active");
+            var typeSign = $(this).attr('data-value');
+            if (typeSign == "0") {
+                //未计算
+                $gridTable.datagrid('uncheckAll');
+                $gridTable.datagrid('unselectAll');
+                $gridTable.datagrid({
+                    url: "../../CreditManage/CreditMoney/GetDataGridJsonV",
+                    queryParams: { typeX: -1 }
+                });
+            }
+            if (typeSign == "1") {
+                //已经通过
+                $gridTable.datagrid('uncheckAll');
+                $gridTable.datagrid('unselectAll');
+                $gridTable.datagrid({
+                    url: "../../CreditManage/CreditMoney/GetDataGridJsonV",
+                    queryParams: { typeX: 1 }
+                });
+            }
+            if (typeSign == "2") {
+                //未通过
+                $gridTable.datagrid('uncheckAll');
+                $gridTable.datagrid('unselectAll');
+                $gridTable.datagrid({
+                    url: "../../CreditManage/CreditMoney/GetDataGridJsonV",
+                    queryParams: { typeX: 0 }
+                });
+            }
+
+
+        });
+
+        $("#time_horizon a.btn-default").click(function () {
+            $("#time_horizon a.btn-default").removeClass("active");
+            $(this).addClass("active");
+            switch ($(this).attr('data-value')) {
+                case "1"://今天
+                    $("#StartTime").val("@DateTime.Now.ToString("yyyy-MM-dd")");
+                    $("#EndTime").val("@DateTime.Now.ToString("yyyy-MM-dd")");
+                    break;
+                case "2"://近7天
+                    $("#StartTime").val("@DateTime.Now.AddDays(-7).ToString("yyyy-MM-dd")");
+                    $("#EndTime").val("@DateTime.Now.ToString("yyyy-MM-dd")");
+                    break;
+                case "3"://近一个月
+                    $("#StartTime").val("@DateTime.Now.AddMonths(-1).ToString("yyyy-MM-dd")");
+                    $("#EndTime").val("@DateTime.Now.ToString("yyyy-MM-dd")");
+                    break;
+                case "4"://近三个月
+                    $("#StartTime").val("@DateTime.Now.AddMonths(-3).ToString("yyyy-MM-dd")");
+                    $("#EndTime").val("@DateTime.Now.ToString("yyyy-MM-dd")");
+                    break;
+                default:
+                    break;
+            }
+            $("#SelectedStartTime").html($("#StartTime").val());
+            $("#SelectedEndTime").html($("#EndTime").val());
+            $('#btn_Search').trigger("click");
+        });
+        //查询点击事件
+        $("#btn_Search").click(function () {
+            if (!$(".ui-filter-text").next('.ui-filter-list').is(":hidden")) {
+                $(".ui-filter-text").trigger("click");
+            }
+            $("#SelectedStartTime").html($("#StartTime").val());
+            $("#SelectedEndTime").html($("#EndTime").val());
+            $gridTable.datagrid('uncheckAll');
+            $gridTable.datagrid('unselectAll');
+            $gridTable.datagrid('load', getSoSo());
+            //$gridTable.datagrid('load', {
+            //    splitPage: $("#filter-form").setQueryParmsAll()
+            // });
+        });
+    }
+    function getSoSo() {
+        var soso = $("#searchbar").getQueryParmsAll();
+        var len = soso.Conditions.length ? soso.Conditions.length : 0;
+        //soso.Conditions[len] = { Key: "", isLike: false, Value: "" };
+        //soso.signs=1;
+        return soso;
+    }
+
+    function showLoading(desc) {
+
+        $("body").append("<div id=\"processingdiv\" style=\"display:none;\"><div class=\"popup\"> <div class=\"popup-body\" ><div class=\"loading\" ><span style=\"font-size: 20px;\">" + desc + "</span></div></div></div></div>");
+
+        //alert($("head").html());
+
+        $.openPopupLayer({
+            name: "processing",
+            width: 400,
+            target: "processingdiv"
+        });
+    }
+
+    function hideLoading() {
+        $.closePopupLayer('processing');
+        $("#processingdiv").remove();
+    }
+    //计算
+    function btnCount(id, userID, index) {
+
+        var rows = $("#gridTable").datagrid("getRows");
+        var row = rows[index];//index为行号
+        if (row.isOK != -1) {
+            dialogMsg("风险值计算已经计算，不能重复操作", 0);
+            return false;
+        }
+
+        showLoading("风险值数据计算中......");
+
+        $.SaveForm({
+            url: '../../CreditManage/CreditMoney/CreditSumCount',
+            param: { id: id },
+            loading: "正在保存数据...",
+            success: function (data) {
+                hideLoading();
+
+                if (data.type == 1) {
+
+                    dialogOpen({
+                        id: 'CreditWriteCount',
+                        title: '信用风险值计算',
+                        url: '../../CreditManage/CreditMoney/CreditMoneyCount?id=' + id + '&userID=' + userID,
+                        width: '900px',
+                        height: '700px',
+                        callBack: function (iframeId) {
+                            top.frames[iframeId].AcceptClick();
+                        },
+                        btn: ['确认', '关闭']
+                    })
+                }
+                else {
+                    dialogMsg(data.message, 0);
+                }
+
+            }
+        })
+
+    }
+
+    //查看
+    function btnLook(id, userID, index) {
+
+        var rows = $("#gridTable").datagrid("getRows");
+        var row = rows[index];//index为行号
+        if (row.isOK == -1) {
+            dialogMsg("风险值计算 没有计算，不能查看", 0);
+            return false;
+        }
+        dialogOpen({
+            id: 'CreditWriteCountLook',
+            title: '信用风险值计算 查看',
+            url: '../../CreditManage/CreditMoney/CreditMoneyLook?id=' + id + '&userID=' + userID,
+            width: '800px',
+            height: '600px',
+            callBack: function (iframeId) {
+                top.frames[iframeId].AcceptClick();
+            },
+            btn: ['关闭']
+        })
+
+
+
+    }
+
+</script>
+@*------------------------------JavaScript方法结束------------------------------*@
+<div class="easyui-layout" data-options="fit:true">
+    <div data-options="region: 'north', border: false" style="height: 60px; overflow: hidden;">
+        <div class="titlePanel">
+            <div class="title-search" style="position:fixed;">
+                <table>
+                    <tr>
+                        <td>查询条件</td>
+                        <td style="padding-left: 10px; ">
+                            <div class="ui-filter" style="width: 200px;">
+                                <div class="ui-filter-text">
+                                    <strong id="SelectedStartTime">@DateTime.Now.AddDays(-7).ToString("yyyy-MM-dd")</strong>至
+                                    <strong id="SelectedEndTime">@DateTime.Now.ToString("yyyy-MM-dd")</strong>
+                                </div>
+                                <div id="searchbar" class="ui-filter-list" style="width: 350px;">
+                                    <form>
+                                        <table class="form" id="filter-form">
+                                            <tr>
+                                                <th class="formTitle">创建日期：</th>
+                                                <td class="formValue">
+                                                    <input id="Category" type="hidden" value="1" />
+                                                    <input type="hidden" name="TimeString[0].Key" value="CreateDate" />
+                                                    <div style="float: left; width: 45%;">
+                                                        <input id="StartTime" name="TimeString[0].begionTime" readonly type="text" value="@DateTime.Now.AddDays(-7).ToString("yyyy-MM-dd")" class="form-control input-wdatepicker" onfocus="WdatePicker()">
+                                                    </div>
+                                                    <div style="float: left; width: 10%; text-align: center;">至</div>
+                                                    <div style="float: left; width: 45%;">
+                                                        <input id="EndTime" name="TimeString[0].endTime" readonly type="text" value="@LeaRun.Util.Time.GetToday()" class="form-control input-wdatepicker" onfocus="WdatePicker()">
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td class="formTitle">姓 名：</td>
+                                                <td class="formValue">
+                                                    <input type="hidden" name="Conditions[0].Key" value="userName" />
+                                                    <input name="Conditions[0].Value" type="text" class="form-control">
+                                                    <input type="hidden" name="Conditions[0].IsLike" value="true" />
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td class="formTitle">身份证：</td>
+                                                <td class="formValue">
+                                                    <input type="hidden" name="Conditions[1].Key" value="carCode" />
+                                                    <input name="Conditions[1].Value" type="text" class="form-control">
+                                                    <input type="hidden" name="Conditions[1].IsLike" value="true" />
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </form>
+
+                                    <div class="ui-filter-list-bottom">
+                                        <a id="btn_Reset" class="btn btn-default">&nbsp;重&nbsp;&nbsp;置</a>
+                                        <a id="btn_Search" class="btn btn-primary">&nbsp;查&nbsp;&nbsp;询</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                        <td style="padding-left: 10px; ">
+                            <div id="time_horizon" class="btn-group">
+                                <a class="btn btn-default" data-value="1">今天</a>
+                                <a class="btn btn-default active" data-value="2">近7天</a>
+                                <a class="btn btn-default" data-value="3">近1个月</a>
+                                <a class="btn btn-default" data-value="4">近3个月</a>
+                            </div>
+
+                            <div id="time_horizonV" class="btn-group">
+                                <a class="btn btn-default" data-value="0">未风险计算</a>
+                                <a class="btn btn-default" data-value="1">风险通过</a>
+                                <a class="btn btn-default" data-value="2">风险未通过</a>
+                            </div>
+                        </td>
+
+                    </tr>
+                </table>
+
+            </div>
+
+            <div class="toolbar">
+                <div class="btn-group">
+                    <a id="lr-replace" class="btn btn-default" onclick="reload()"><i class="fa fa-refresh"></i>&nbsp;刷新</a>
+                </div>
+                @*<script>$('.toolbar').authorizeButton()</script>*@
+            </div>
+        </div>
+    </div>
+    <div data-options="region:'center',border: false">
+        <table id="gridTable"></table>
+    </div>
+</div>

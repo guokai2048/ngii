@@ -1,0 +1,60 @@
+﻿<style>
+    table {
+            border: 0px;
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 15px;
+        }
+
+        th {
+            border: 1px solid #000000;
+            border-collapse: collapse;
+        }
+
+        td {
+            border: 1px solid #000000;
+            border-collapse: collapse;
+        }
+</style>
+<table>
+    <thead>
+        <!--<tr>
+            <td style="border: none; text-align: center; font-size: 20px;font-weight: bold;" colspan="12">
+                月份铝箔退火炉装出炉计划表
+            </td>
+        </tr>
+        <tr>
+            <td style="border: none; text-align: center; font-size: 14px;font-weight: normal;" colspan="2">
+                日期: 
+            </td>
+            <td style="border: none;padding-left:200px; text-align: center; font-size: 14px;font-weight: normal;" colspan="2">
+                总重:
+            </td>
+        </tr>-->
+        <tr>
+            <td style="width:2%;text-align:center;">序</td>
+            <td style="width:8%;text-align:center;">炉次号</td>
+            <td style="width:8%;text-align:center;">炉号</td>
+            <td style="width:8%;text-align:center;">规格</td>
+            <td style="width:8%;text-align:center;">重量</td>
+            <td style="width:15%;text-align:center;">结束时间</td>
+            <td style="width:8%;text-align:center;">剩余可用天数</td>
+            <td style="width:8%;text-align:center;">下炉计划装料</td>            
+        </tr>
+    </thead>
+    <tbody>
+        {{each $data tr index}}    
+        <tr>
+            <td style="text-align:center;">{{index+1}}</td>
+            <td style="text-align:center;">{{tr.louCi}}</td>
+            <td style="text-align:center;">{{tr.louHao}}</td>
+            <td style="text-align:center;">{{tr.guiGe}}</td>
+            <td style="text-align:center;">{{tr.allZhongL}}</td>
+            <td style="text-align:center;">{{tr.gyETime}}</td>
+            <td style="text-align:center;"></td>
+            <td style="text-align:center;"></td> 
+        </tr>        
+        {{/each}}   
+        
+    </tbody>
+</table>  

@@ -1,0 +1,118 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>甘特图</title>
+    <meta charset="utf-8" />
+    <script type="text/javascript" src="jquery-2.0.3.min.js" language="javascript"></script>
+    <style>
+        .form {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed;
+            margin: 0px;
+            padding: 0px;
+            border-width: initial;
+            border-style: none;
+            border-color: initial;
+            border-image: initial;
+        }
+
+            .form th {
+                height: 30px;
+                background-color: #074886 !important;
+                color: #fff;
+            }
+
+            .form td, .form th {
+                white-space: nowrap;
+                font-weight: normal;
+                background-color: #fff;
+                border-width: 1px;
+                border-style: solid;
+                border-color: rgb(202, 202, 202);
+                border-image: initial;
+            }
+
+            .form td {
+                height: 28px;
+                line-height: 28px;
+                padding-left: 3px;
+            }
+
+        .lineA {
+            height: 20px;
+            line-height: 20px;
+            background-color: #00ff00;            
+            box-sizing: border-box; 
+			z-index:1; 
+			float:left;
+        }
+        .lineB {
+            height: 20px;
+            line-height: 20px;
+            background-color: #ff0000;
+            box-sizing: border-box;
+			position:absolute;			
+			z-index:0;	
+			opacity:0.6;	 
+        }
+        .lineAf {
+            padding: 3px 0;
+        }
+        .lineBf {
+            height: 14px;
+            line-height: 14px;
+        }	
+		.boxDiv{
+		    position: relative;
+			line-height: 20px;
+			height: 20px;
+			margin: 2px 0;
+		}
+    </style>
+</head>
+<body>
+    <table id="theData" class="form">
+        <tr>
+            <th>长度A</th>
+            <th>长度B</th>
+            <th style="width:1000px;">视图</th>
+        </tr>
+        <tr data-id="">
+            <td><label class="cA">4</label></td>
+            <td><label  class="cB">2</label></td>
+            <td>
+               <div  class="boxDiv"> <div class="lineA"></div><div class="lineB"></div></div>
+            </td>
+        </tr> 
+		<tr data-id="">
+            <td><label class="cA">5</label></td>
+            <td><label  class="cB">9</label></td>
+            <td>
+               <div class="boxDiv"> <div class="lineA"></div><div class="lineB"></div></div>
+            </td>
+        </tr>     		
+    </table>
+    <script>
+        function initGanTe() {
+            var _wa = 0, _wb = 0,i=0;
+            $("#theData tr").each(function () {
+                if ($(this).find(".cA").size() > 0) {
+                    _wa = parseFloat($.trim($(this).find(".cA").text())) * 10;
+                    _wb = parseFloat($.trim($(this).find(".cB").text())) * 10;
+                    $(this).find(".lineA").css("width", _wa + "px");
+                    if (_wb > 0)
+                        $(this).find(".lineB").css("width", Math.abs(_wb) + "px");
+                    else {
+                        $(this).find(".lineB").css("width", Math.abs(_wb) + "px").css("margin-left", (_wa + _wb) + "px");
+                        $(this).find(".lineA").addClass("lineAf");
+                        $(this).find(".lineB").addClass("lineBf");
+                    }
+                }
+            });
+        }
+        initGanTe();
+    </script>
+</body>
+</html>

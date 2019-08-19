@@ -1,0 +1,69 @@
+﻿@{
+    ViewBag.Title = "附件管理";
+    Layout = "~/Views/Shared/_IndexEasyui.cshtml";
+}
+<script src="~/Content/scripts/plugins/uploadifive/jquery.uploadifive.js"></script>
+<link href="~/Content/scripts/plugins/uploadifive/uploadifive.css" rel="stylesheet" />
+<script>
+    var folder = request('folder');
+    var billType = request('billType');
+    var category = request('category');
+    $(function () {
+        parent.$.messager.progress('close');
+        $('#file_upload').uploadifive({
+            'auto': false,
+            'buttonClass': 'btn btn-primary',
+            'buttonText': "选择文件", 
+            'queueID': 'uploadqueue',
+            'formData': { 'folder': folder, 'billType': billType, 'category': category }, //传参
+            'uploadScript': '/PublicInfoManage/Attachment/UploadFile',
+            'onUploadComplete': function (file, data) {
+                var iframe = getThisIframe();
+                var thiswin = parent.$(iframe).parent();
+                var options = thiswin.window("options");
+                options.onRefresh(data);
+            }
+        });
+    });
+
+    function getThisIframe() {
+        if (!top) return null;
+        var iframes = parent.document.getElementsByTagName('iframe');
+        if (iframes.length == 0) return null;
+        for (var i = 0; i < iframes.length; ++i) {
+            var iframe = iframes[i];
+            if (iframe.contentWindow == self) {
+                return iframe;
+            }
+        }
+        return null;
+    }
+
+    function destroyIframe(iframeEl) {
+        if (!iframeEl) return;
+        iframeEl.parentNode.removeChild(iframeEl);
+        iframeEl = null;
+    };
+
+    function closeIframe() {
+        var iframe = getThisIframe();
+        var thiswin = parent.$(iframe).parent();
+
+        destroyIframe(iframe);
+        thiswin.window('destroy');
+    }
+</script>
+<div class="easyui-layout" data-options="fit:true">
+    <div data-options="region:'center',border:false" style="background:#fafafa;">
+        <div id="uploadqueue" style="margin:0 auto;">
+            <input id="file_upload" name="file_upload" type="file" multiple="true">
+        </div>
+    </div>
+    <div data-options="region:'south',border:false" style="height:40px;background:#efefef;overflow: hidden;">
+        <div style="text-align:center;margin:10px;">
+            <a class="easyui-linkbutton" data-options="iconCls:'icon-ok'" id="btnConfirm" href="javascript:void(0)" onclick="$('#file_upload').uploadifive('upload');">确定</a>
+            <a class="easyui-linkbutton" data-options="iconCls:'icon-cancel'" id="btnCancel" href="javascript:void(0)" onclick="closeIframe()">关闭</a>
+        </div>
+    </div>
+</div>
+

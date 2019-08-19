@@ -1,0 +1,339 @@
+@{;
+    ViewBag.Title = "附件表:列表页面";
+    Layout = "~/Views/Shared/_IndexEasyui.cshtml";
+}
+
+<script>
+
+    $(function () {
+        InitialPage();
+        GetGrid();
+    });
+    //初始化页面
+    function InitialPage() {
+        //重设toolbar
+        $(".toolbar").css("padding-left", $('.titlePanel').width() - $('.toolbar').width() - 30);
+
+        $("#picType").ComboBox({
+            url: "../../SystemManage/DataItemDetail/GetDataItemListJson",
+            param: { EnCode: "OrderPic" },
+            id: "ItemValue",
+            text: "ItemName",
+            description: "==请选择==",
+            height: "200px"
+        }).bind("change", function () {
+            var value = $(this).attr('data-value');
+            $("#Sys_picType").val(value);
+        });
+
+    }
+    //加载表格
+    function GetGrid() {
+        //加载表格grid
+        var $gridTable = $('#gridTable');
+        $gridTable.datagrid({
+            fit: true,
+            idField: 'id',
+            rownumbers: true,
+            pagination: true,
+            pageSize: 50,
+            pageList: [50, 150, 500],
+            emptyMsg: '<div style="color:red; padding:4px; border-bottom:#ccc 1px solid;">无相关数据!</div>',
+            sortName: 'CreateDate',
+            sortOrder: 'desc',
+            singleSelect: true,
+            nowrap: true,
+            url: "../../PublicInfoManage/Attachment/GetDataGridJsonV2",
+            queryParams: {
+                splitPage: $("#filter-form").setQueryParmsAll()
+            },
+            onDblClickRow: function (index, row) {
+                $gridTable.datagrid('unselectAll');
+                $gridTable.datagrid('selectRow', index);
+                btn_detail();
+            },
+            columns: [[
+               { title: '系统ID', field: 'id', checkbox: true },
+
+               { title: '物料号', field: 'billType', width: 130, align: 'left', sortable: true, hidden: false },
+               { title: '名称', field: 'cinvName', width: 100, align: 'left', sortable: true, hidden: false },
+               { title: '版本', field: 'category', width: 50, align: 'left', sortable: true, hidden: false },
+
+               { title: '等级', field: 'cinvLevel', width: 40, align: 'left', sortable: true, hidden: false },
+
+               { title: '文件夹地址', field: 'folder', width: 100, align: 'left', sortable: true, hidden: true },
+               { title: '文件名称', field: 'name', width: 100, align: 'left', sortable: true, hidden: true },
+               { title: '文件全名', field: 'realname', width: 150, align: 'left', sortable: true, hidden: false },
+
+               { title: '工序', field: 'useInfo', width: 50, align: 'left', sortable: true, hidden: false },
+               { title: '工序号', field: 'useInfoCode', width: 80, align: 'left', sortable: true, hidden: false },
+               {
+                   title: '文件类型', field: 'picType', width: 90, align: 'left', sortable: true, hidden: false,
+                   formatter: function (value, row, index) {
+                       return top.clientdataItem["OrderPic"][value] == undefined ? "" : top.clientdataItem["OrderPic"][value];
+                   }
+
+               },
+               {
+                   title: '下载', field: 'fileID', width: 50, align: 'left', hidden: false,
+                   formatter: function (value, row, index) {
+                       if (value == null || value == "") {
+                           // return '<a>' + value + '</a>';
+                       } else {
+                           var downloadUrl = '/PublicInfoManage/Attachment/DownloadFile?id=' + value;
+                           return '<a href=' + downloadUrl + '>下载</a>';
+                       }
+                   }
+               },
+               { title: '大小(MB)', field: 'size', width: 80, align: 'left', sortable: true, hidden: false },
+               { title: '文件URL', field: 'url', width: 100, align: 'left', sortable: true, hidden: true },
+               { title: '备注', field: 'strMemo', width: 50, align: 'left', sortable: true, hidden: false },
+
+               { title: '顺序', field: 'seq', width: 50, align: 'left', sortable: true, hidden: true },
+               { title: '删除标记', field: 'isDelete', width: 100, align: 'left', sortable: true, hidden: true },
+
+               { title: '创建时间', field: 'CreateDate', width: 130, align: 'left', sortable: true, hidden: false },
+               { title: '创建人ID', field: 'CreateUserId', width: 100, align: 'left', sortable: true, hidden: true },
+               { title: '创建人', field: 'CreateUserName', width: 100, align: 'left', sortable: true, hidden: false },
+               { title: '修改时间', field: 'ModifyDate', width: 130, align: 'left', sortable: true, hidden: false },
+               { title: '修改人ID', field: 'ModifyUserId', width: 100, align: 'left', sortable: true, hidden: true },
+               { title: '修改人', field: 'ModifyUserName', width: 100, align: 'left', sortable: true, hidden: false },
+            ]]
+        });
+        //$gridTable.authorizeColModel();
+        $("#time_horizon a.btn-default").click(function () {
+            $("#time_horizon a.btn-default").removeClass("active");
+            $(this).addClass("active");
+            switch ($(this).attr('data-value')) {
+                case "1"://今天
+                    $("#StartTime").val("@DateTime.Now.ToString("yyyy-MM-dd")");
+                    $("#EndTime").val("@DateTime.Now.ToString("yyyy-MM-dd")");
+                    break;
+                case "2"://近7天
+                    $("#StartTime").val("@DateTime.Now.AddDays(-7).ToString("yyyy-MM-dd")");
+                    $("#EndTime").val("@DateTime.Now.ToString("yyyy-MM-dd")");
+                    break;
+                case "3"://近一个月
+                    $("#StartTime").val("@DateTime.Now.AddMonths(-1).ToString("yyyy-MM-dd")");
+                    $("#EndTime").val("@DateTime.Now.ToString("yyyy-MM-dd")");
+                    break;
+                default:
+                    break;
+            }
+            $("#SelectedStartTime").html($("#StartTime").val());
+            $("#SelectedEndTime").html($("#EndTime").val());
+            $('#btn_Search').trigger("click");
+        });
+        //查询点击事件
+        $("#btn_Search").click(function () {
+            if (!$(".ui-filter-text").next('.ui-filter-list').is(":hidden")) {
+                $(".ui-filter-text").trigger("click");
+            }
+            $("#SelectedStartTime").html($("#StartTime").val());
+            $("#SelectedEndTime").html($("#EndTime").val());
+
+            $gridTable.datagrid('uncheckAll');
+            $gridTable.datagrid('unselectAll');
+            $gridTable.datagrid('load', {
+                splitPage: $("#filter-form").setQueryParmsAll()
+            });
+        });
+
+    }
+
+    function btn_158pic() {
+        dialogOpen({
+            id: "PicUpload158",
+            title: '158原始图纸批量上传',
+            url: "../../PublicInfoManage/Attachment/PicUpload158",
+            width: "800px",
+            height: "600px",
+            btn: ['操作完成', '关闭'],
+            callBack: function (iframeId) {
+                top.frames[iframeId].AcceptClick();
+            }
+        });
+
+    }
+    //内部图纸上传
+    function btn_SHpic() {
+        dialogOpen({
+            id: "PicUploadSH",
+            title: '山航内部图纸批量上传',
+            url: "../../PublicInfoManage/Attachment/PicUploadSH",
+            width: "800px",
+            height: "600px",
+            btn: ['操作完成', '关闭'],
+            callBack: function (iframeId) {
+                top.frames[iframeId].AcceptClick();
+            }
+        }); 
+
+    }
+    //程序上传
+    function btn_SHSoft() {
+        dialogOpen({
+            id: "PicUploadSoft",
+            title: '山航工序程序上传',
+            url: "../../PublicInfoManage/Attachment/PicUploadSoft",
+            width: "800px",
+            height: "600px",
+            btn: ['操作完成', '关闭'],
+            callBack: function (iframeId) {
+                top.frames[iframeId].AcceptClick();
+            }
+        });
+
+    }
+    //详细
+    function btn_detail() {
+
+        var keyValue = $("#gridTable").easyUiGridRowValue("id");
+        if (checkedRow(keyValue)) {
+            dialogOpen({
+                id: "AttachmentForm",
+                title: '附件详细',
+                url: "../../PublicInfoManage/Attachment/AttachmentForm?keyValue=" + keyValue,
+                width: "800px",
+                height: "600px",
+                btn: ['操作完成', '关闭'],
+                callBack: function (iframeId) {
+                    top.frames[iframeId].AcceptClick();
+                }
+            });
+        }
+
+    }
+    //删除
+    function btn_del() {
+        var keyValue = $('#gridTable').easyUiGridRowValue('id');
+        if (keyValue) {
+            $.RemoveForm({
+                url: '../../PublicInfoManage/Attachment/RemoveForm?keyValue=' + keyValue,
+                param: { keyValue: keyValue },
+                success: function (data) {
+                    $('#gridTable').datagrid('reload');
+                    $('#gridTable').datagrid('uncheckAll');
+                    $('#gridTable').datagrid('unselectAll');
+                }
+            })
+        } else {
+            dialogMsg('请选择需要删除的信息！', 0);
+        }
+
+    }
+
+</script>
+
+@*------------------------------JavaScript方法结束------------------------------*@
+<div class="easyui-layout" data-options="fit:true">
+    <div data-options="region: 'north', border: false" style="height: 60px; overflow: hidden;">
+        <div class="titlePanel">
+            <div class="title-search" style="position:fixed;z-index:2;">
+
+                <table>
+                    <tr>
+                        <td>查询条件</td>
+                        <td style="padding-left: 10px;">
+                            <div class="ui-filter" style="width: 200px;">
+                                <div class="ui-filter-text">
+                                    <strong id="SelectedStartTime">@DateTime.Now.ToString("yyyy-MM-dd")</strong>至
+                                    <strong id="SelectedEndTime">@DateTime.Now.ToString("yyyy-MM-dd")</strong>
+                                </div>
+                                <div id="searchbar" class="ui-filter-list" style="width: 700px;">
+
+                                    <form>
+                                        <table class="form" id="filter-form">
+                                            <tr>
+                                                <th class="formTitle">创建日期</th>
+                                                <td class="formValue">
+                                                    <input type="hidden" name="TimeString[0].Key" value="CreateDate" />
+                                                    <div style="float: left; width: 45%;">
+                                                        <input id="StartTime" name="TimeString[0].begionTime" readonly type="text" value="@DateTime.Now.ToString("yyyy-MM-dd")" class="form-control input-wdatepicker" onfocus="WdatePicker({maxDate:'%y-%M-%d'})">
+                                                    </div>
+                                                    <div style="float: left; width: 10%; text-align: center;">至</div>
+                                                    <div style="float: left; width: 45%;">
+                                                        <input id="EndTime" name="TimeString[0].endTime" readonly type="text" value="@LeaRun.Util.Time.GetToday()" class="form-control input-wdatepicker" onfocus="WdatePicker()">
+                                                    </div>
+                                                </td>
+
+                                                <td class="formTitle">文件类型</td>
+                                                <td class="formValue">
+                                                    <input type="hidden" name="Conditions[0].Key" value="picType" />
+                                                    <input id="Sys_picType" type="hidden" name="Conditions[0].Value" class="form-control">
+                                                    <input type="hidden" name="Conditions[0].IsLike" value="false" />
+                                                    <div id="picType" type="select" class="ui-select"></div>
+
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td class="formTitle">物料名称</td>
+                                                <td class="formValue">
+                                                    <input type="hidden" name="Conditions[1].Key" value="cinvName" />
+                                                    <input name="Conditions[1].Value" type="text" class="form-control">
+                                                    <input type="hidden" name="Conditions[1].IsLike" value="true" />
+                                                </td>
+
+                                                <td class="formTitle">物料编号</td>
+                                                <td class="formValue">
+                                                    <input type="hidden" name="Conditions[2].Key" value="billType" />
+                                                    <input name="Conditions[2].Value" type="text" class="form-control">
+                                                    <input type="hidden" name="Conditions[2].IsLike" value="true" />
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td class="formTitle">物料大类</td>
+                                                <td class="formValue">
+                                                    <input type="hidden" name="Conditions[3].Key" value="cinvMaterielCode" />
+                                                    <input name="Conditions[3].Value" type="text" class="form-control">
+                                                    <input type="hidden" name="Conditions[3].IsLike" value="true" />
+                                                </td>
+
+                                                <td class="formTitle">物料分类</td>
+                                                <td class="formValue">
+                                                    <input type="hidden" name="Conditions[4].Key" value="cinvMaterielName" />
+                                                    <input name="Conditions[4].Value" type="text" class="form-control">
+                                                    <input type="hidden" name="Conditions[4].IsLike" value="true" />
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </form>
+
+
+                                    <div class="ui-filter-list-bottom">
+                                        <a id="btn_Reset" class="btn btn-default">&nbsp;重&nbsp;&nbsp;置</a>
+                                        <a id="btn_Search" class="btn btn-primary">&nbsp;查&nbsp;&nbsp;询</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                        <td style="padding-left: 10px;">
+                            <div id="time_horizon" class="btn-group">
+                                <a class="btn btn-default active" data-value="1">今天</a>
+                                <a class="btn btn-default" data-value="2">近7天</a>
+                                <a class="btn btn-default" data-value="3">近1个月</a>
+                            </div>
+                        </td>
+                    </tr>
+                </table>
+
+            </div>
+            <div class="toolbar" style="position:fixed;z-index:1;">
+                <div class="btn-group">
+
+                    <a id="lr-replace" class="btn btn-default" onclick="reload()"><i class="fa fa-refresh"></i>&nbsp;刷新</a>
+
+                    @*<a id="lr-158Pic" class="btn btn-default" onclick="btn_158pic()"><i class="fa fa-list-alt"></i>&nbsp;158原始图纸</a>
+                    <a id="lr-SHPic" class="btn btn-default" onclick="btn_SHpic()"><i class="fa fa-list-alt"></i>&nbsp;内部图纸</a>
+                    <a id="lr-SHPic" class="btn btn-default" onclick="btn_SHSoft()"><i class="fa fa-list-alt"></i>&nbsp;工序程序</a>*@
+
+                    <a id="lr-detail" class="btn btn-default" onclick="btn_detail()"><i class="fa fa-pencil-square-o"></i>&nbsp;变更</a>
+                    <a id="lr-detail" class="btn btn-default" onclick="btn_del()"><i class="fa fa-list-alt"></i>&nbsp;删除</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div data-options="region:'center',border: false">
+        <table id="gridTable"></table>
+    </div>
+</div>
